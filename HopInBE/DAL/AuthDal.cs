@@ -12,7 +12,7 @@ namespace HopInBE.DAL
 
         public AuthDal() { }
 
-        public register()
+        //public register()
 
     }
 }
