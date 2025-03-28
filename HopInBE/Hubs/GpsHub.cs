@@ -2,17 +2,27 @@
 using MongoDB.Driver;
 using System.Threading.Tasks;
 using HopInBE.Database_Model;
+using AutoMapper;
+using HopInBE.DataAccess.IDataProvider;
+using HopInBE.DataAccess.DBCommon;
 
 namespace HopInBE.Hubs
 {
     public class GpsHub : Hub
     {
-        private readonly IMongoCollection<DriverLocation> _driverLocations;
+        private readonly IBaseRepository<DriverLocation> _driverLocations;
+        private readonly IBaseRepository<GpsHistory> _gpsHistory;
+        private readonly IDbSettings dbSettings;
+        private IHttpContextAccessor httpContextAccessor;
+        public readonly IMapper mapper;
 
-        public GpsHub(IMongoClient client)
+        public GpsHub(IDbSettings dbSettings, IMapper mapperObj, IHttpContextAccessor httpContextAccessor)
         {
-            var database = client.GetDatabase("RideBookingDB");
-            _driverLocations = database.GetCollection<DriverLocation>("DriverLocations");
+            this.dbSettings = dbSettings;
+            this.httpContextAccessor = httpContextAccessor;
+            this.mapper = mapperObj;
+            _driverLocations = Factory<DriverLocation>.getInstance(dbSettings);
+            _gpsHistory = Factory<GpsHistory>.getInstance(dbSettings);
         }
 
         public async Task UpdateDriverLocation(string driverId, double latitude, double longitude)
@@ -23,14 +33,23 @@ namespace HopInBE.Hubs
                 .Set(d => d.Longitude, longitude)
                 .Set(d => d.IsAvailable, true);
 
-            await _driverLocations.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+            await _driverLocations.collection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+
+            var gpsHistoryEntry = new GpsHistory
+            {
+                DriverId = driverId,
+                Latitude = latitude,
+                Longitude = longitude,
+                Timestamp = DateTime.UtcNow
+            };
+            await _gpsHistory.collection.InsertOneAsync(gpsHistoryEntry);
 
             await Clients.All.SendAsync("DriverLocationUpdated", driverId, latitude, longitude);
         }
 
         public async Task RequestNearestDriver(double userLatitude, double userLongitude)
         {
-            var availableDrivers = await _driverLocations.Find(d => d.IsAvailable).ToListAsync();
+            var availableDrivers = await _driverLocations.collection.Aggregate().Match(d => d.IsAvailable).ToListAsync();
 
             var nearestDriver = availableDrivers
                 .OrderBy(d => GetDistance(userLatitude, userLongitude, d.Latitude, d.Longitude))

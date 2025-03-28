@@ -38,7 +38,8 @@ namespace HopInBE.DAL
             if (request.Role == "User")
             {
                 var existingUser = await _users.collection.Aggregate().Match(u => u.mobileNumber == request.MobileNumber).FirstOrDefaultAsync();
-                if (existingUser != null) return ("User already registered");
+                if (existingUser != null) 
+                    return ("User already registered");
 
                 var newUser = new User
                 {
@@ -53,7 +54,8 @@ namespace HopInBE.DAL
             else if (request.Role == "Driver")
             {
                 var existingDriver = await _drivers.collection.Aggregate().Match(d => d.mobileNumber == request.MobileNumber).FirstOrDefaultAsync();
-                if (existingDriver != null) return ("Driver already registered");
+                if (existingDriver != null) 
+                    return ("Driver already registered");
 
                 var newDriver = new Driver
                 {

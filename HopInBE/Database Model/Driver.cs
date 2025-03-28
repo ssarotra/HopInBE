@@ -1,6 +1,7 @@
 ﻿using HopInBE.DataAccess.IDataProvider;
 using HopInBE.DataAccess.MongoDB;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace HopInBE.Database_Model
 {
@@ -15,5 +16,11 @@ namespace HopInBE.Database_Model
         public string vehicleType { get; set; }
         public string vehicleNumber { get; set; }
         public string upiId { get; set; }
+        public bool IsAvailable { get; set; } 
+        public bool IsOnline { get; set; } 
+        [BsonElement("Location")]
+        public GeoJsonPoint<GeoJson2DCoordinates> Location { get; set; }
+        public string AssignedRideId { get; set; }
+
     }
 }

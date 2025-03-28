@@ -81,10 +81,17 @@ namespace HopInBE.DataAccess
         /// <param name="Key"></param>
         /// <param name="Section"></param>
         /// <returns></returns>
-        public static string GetAppSettingValue(string Key, string Section)
+        public static T GetAppSetting<T>(string key, string section)
         {
-            return GetSettingValue(Key, Section);
+            var builder = new ConfigurationBuilder()
+                                .SetBasePath(Directory.GetCurrentDirectory())
+                                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                                .AddEnvironmentVariables();
+
+            IConfigurationRoot configuration = builder.Build();
+            return configuration.GetSection(section).GetValue<T>(key);
         }
+
 
         /// <summary>
         /// This used to read value from appsetting file.
