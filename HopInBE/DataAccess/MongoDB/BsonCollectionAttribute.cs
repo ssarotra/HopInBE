@@ -1,4 +1,4 @@
-﻿namespace HopInBE.MongoDb
+﻿namespace HopInBE.DataAccess.MongoDB
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class BsonCollectionAttribute : Attribute
